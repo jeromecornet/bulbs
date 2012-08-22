@@ -56,7 +56,12 @@ def initialize_elements(client,response):
     # return a generator of initialized elements.
     if response.total_size > 0:
         for result in response.results:
-            yield initialize_element(client,result)
+            if isinstance(result,list):
+                yield [initialize_element(client, res) for res in result]
+            elif isinstance(result,dict):
+                yield dict((column,initialize_element(client, res)) for column,res in result.iteritems())
+            else:
+                yield initialize_element(client,result)
 
 
 def initialize_element(client,result):

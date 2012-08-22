@@ -404,7 +404,16 @@ class Neo4jClient(Client):
 
         # Cypher data hack
         resp.total_size = len(resp.results.data)
-        resp.results = (Neo4jResult(result[0], self.config) for result in resp.results.data)
+        if len(resp.results.data) and len(resp.results.data[0])==1:
+            # single column
+            resp.results = [ Neo4jResult(result[0], self.config) for result in resp.results.data]
+        elif 'columns' not in resp.results.raw:
+            # unnamed multiple columns, return a list of tuples of Neo4JResults
+            resp.results = [[ Neo4jResult(res_el, self.config) for res_el in result] for result in resp.results.data]        
+        else:
+            # named columns, return a list of dict with key=column, value=Neo4JResult=data
+            resp.results = [dict( (resp.results.raw['columns'][index],Neo4jResult(res_el, self.config)) for index,res_el in enumerate(result) ) for result in resp.results.data]
+
         return resp
 
     # Vertex Proxy
