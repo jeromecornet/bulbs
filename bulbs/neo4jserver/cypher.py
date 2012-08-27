@@ -9,7 +9,9 @@ import re
 import yaml 
 from string import Template
 
-from bulbs.utils import initialize_elements
+from bulbs.utils import initialize_element
+
+
 
 class Cypher(object):
 
@@ -26,10 +28,17 @@ class Cypher(object):
         columns = resp.content['columns']
         data = resp.content['data']
         return columns, data
+    
+    def table_query(self,query,params=None):
+        from .client import Neo4jResult
+        resp = self.client.cypher(query,params)
+        results = [dict( (resp.content['columns'][index],initialize_element(self.client,Neo4jResult(res_el, self.client.config))) for index,res_el in enumerate(result) ) for result in resp.content['data']]
+        return results
 
     def execute(self, query, params=None):
         return self.client.cypher(query, params)
         
+ 
 
 class ScriptError(Exception):
     pass
